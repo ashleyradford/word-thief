@@ -1,0 +1,15 @@
+.App {
+  text-align: center;
+}
+
+.game-window {
+  width: 50%;
+  height: 400px;
+  float: left;
+}
+
+.chat-window {
+  width: 50%;
+  height: 400px;
+  float: right;
+}
