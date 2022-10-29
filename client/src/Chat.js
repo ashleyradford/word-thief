@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import ScrollToBottom from "react-scroll-to-bottom";
 
 function Chat({ socket, username, room }) {
@@ -44,20 +44,20 @@ function Chat({ socket, username, room }) {
             <div className="chat-header">
                 <p>Guess a word!</p>
             </div>
-            <div className="chat-body"></div>
+            <div className="chat-body">
                 <ScrollToBottom className="messageContainter">
                     {messageList.map((messageData, i) => {
                         return (
                             <div
-                                key={i} // warning without each sibling having an id
                                 className="message"
+                                key={i} // warning without each sibling having an id
                                 id={username === messageData.author ? "you" : "other"}>
                                 <div>
                                     <div className="messageContent">
-                                        <p>{messageData.message}</p>
+                                        <p><strong>{messageData.message}</strong></p>
                                     </div>
                                     <div className="messageMeta">
-                                        <p id="time">{messageData.time}</p>
+                                        {/* <p id="time">{messageData.time}</p> */}
                                         <p id="author">{messageData.author}</p>
                                     </div>
                                 </div>
@@ -65,6 +65,7 @@ function Chat({ socket, username, room }) {
                         );
                     })}
                 </ScrollToBottom>
+            </div>
             <div className="chat-footer">
                 <input
                     type="text"

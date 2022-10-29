@@ -2,7 +2,7 @@ import "./App.css";
 import io from "socket.io-client";
 import { Fragment, useState } from "react";
 import Chat from "./Chat";
-import Game from "./Game";
+import Board from "./Board";
 
 // connecting frontend to backend
 const socket = io.connect("http://localhost:3001");
@@ -43,7 +43,10 @@ function App() {
           <button onClick={joinRoom}>Join</button>
         </div>
       ) : (
-        <Chat socket={socket} username={username} room={room}/>
+        <Fragment>
+          <Board socket={socket} username={username} room={room}/>
+          <Chat socket={socket} username={username} room={room}/>
+        </Fragment>
       )}
     </div>
   );

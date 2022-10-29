@@ -13,3 +13,12 @@
   height: 400px;
   float: right;
 }
+
+.cols {
+  text-align: center;
+  border: 1px solid #999999;
+  width: 35px;
+  height: 35px;
+  display: inline-block;
+  vertical-align: bottom;
+}
