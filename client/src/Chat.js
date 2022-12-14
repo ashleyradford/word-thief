@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import ScrollToBottom from "react-scroll-to-bottom";
 
-function Chat({ socket, username, room }) {
-
+const Chat = ({ socket, username, room }) => {
     // create state so we can keep track of guess
     const [currentGuess, setCurrentGuess] = useState("");
 
@@ -42,7 +41,7 @@ function Chat({ socket, username, room }) {
     return (
         <div className="chat-window">
             <div className="chat-header">
-                <p>Guess a word!</p>
+                <br></br><p>Guess a word!</p>
             </div>
             <div className="chat-body">
                 <ScrollToBottom className="messageContainter">
@@ -78,7 +77,7 @@ function Chat({ socket, username, room }) {
                         event.key === "Enter" && sendMessage();
                     }}
                 />
-                <button onClick={sendMessage}>Guess</button>
+                <button type="button" className="btn btn-primary" onClick={sendMessage}>Guess</button>
             </div>
         </div>
     );

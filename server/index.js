@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();                      // an instance of the express function
 const http = require("http");
 const cors = require("cors");               // helps with requests across different origins
-const { Server } = require("socket.io")     // importing class Server from socket.io library
+const { Server } = require("socket.io");    // importing class Server from socket.io library
 
 // using cors middleware
 app.use(cors());
@@ -21,19 +21,51 @@ const io = new Server(server, {
     }
 });
 
+const status = {
+    WAITING: 'waiting',
+    PLAYING: 'playing',
+    WIN: 'win',
+    RESTART: 'restart'
+}
+
+let gameState = {
+    board: {},
+    players: []
+    //status: status.WAITING
+};
+
 // initiate and detect if someone connected to this socket io server
 // listening for an event with "connection" name
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
 
     // create an event in socket.io which determines when someone wants to join a room
-    socket.on("join_room", (id) => {
-        socket.join(id);
-        console.log(`User with ID: ${socket.id} joined room: ${id}`);
+    socket.on("join_room", (room) => {
+        socket.join(room);
+        gameState.players.push(socket.id);
+
+        // create board when first player joins game room
+        if (gameState.players.length == 1) {
+            const board = require("./board");
+            gameState.board = board.createBoard();
+        }
+        
+        // io.in(id).emit("generate_puzzle", puzzle);
+        console.log(`User with ID: ${socket.id} joined room: ${room}`);
+    })
+
+    socket.on("start_game", (data) => {
+        data.gameState = gameState;
+        data.showGame = true;
+        io.in(data.room).emit("game_state", data);
     })
 
     // event when user sends a messsage
     socket.on("send_message", (data) => {
+
+        //checkGuess();
+        //io.in(data.room).emit("game_state", data);
+        
         io.in(data.room).emit("receive_message", data);
     })
 
@@ -44,5 +76,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(3001, () => {
-    console.log("Server running :)");
+    console.log("Server is listening on port 3001");
 });

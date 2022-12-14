@@ -14,11 +14,35 @@
   float: right;
 }
 
-.cols {
-  text-align: center;
-  border: 1px solid #999999;
-  width: 35px;
-  height: 35px;
-  display: inline-block;
-  vertical-align: bottom;
+.num {
+  font-size: 11px;
+  text-align: right;
+  width: 100%;
+}
+
+.letter {
+  border: 1px solid black;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  margin: 0 -1px -1px 0;
+}
+
+.no-letter {
+  padding: 70px 0;
+  color: white;
+  border: 1px solid black;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  margin: 0 -1px -1px 0;
+}
+
+.empty {
+  border: 1px solid white;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  margin: 0 -1px -1px 0;
+  opacity: 0.0;
 }

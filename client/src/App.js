@@ -2,7 +2,7 @@ import "./App.css";
 import io from "socket.io-client";
 import { Fragment, useState } from "react";
 import Chat from "./Chat";
-import Board from "./Board";
+import Game from "./Game";
 
 // connecting frontend to backend
 const socket = io.connect("http://localhost:3001");
@@ -11,12 +11,11 @@ function App() {
 
   // create a state to represent username
   const [username, setUsername] = useState("")
-  const [room, setRoom] = useState("");
   const [showChat, setShowChat] = useState(false);
 
   const joinRoom = () => {
-    if (username !== "" && room !== "") {
-      socket.emit("join_room", room);
+    if (username !== "") {
+      socket.emit("join_room", "game");
       setShowChat(true);
     }
   };
@@ -25,27 +24,20 @@ function App() {
     <div className="App">
       {!showChat ? (
         <div className="join-room">
-          <h3>Join a Room</h3>
+          <br></br><h3>Join Game</h3><br></br>
           <input
             type = "text"
-            placeholder = "Sally..."
+            placeholder = "Player name..."
             onChange = {(event) => {
               setUsername(event.target.value);
             }}
           />
-          <input
-            type = "text"
-            placeholder = "Room ID..."
-            onChange = {(event) => {
-              setRoom(event.target.value);
-            }}
-          />
-          <button onClick={joinRoom}>Join</button>
+          <button type="button" className="btn btn-primary" onClick={joinRoom}>Join</button>
         </div>
       ) : (
         <Fragment>
-          <Board socket={socket} username={username} room={room}/>
-          <Chat socket={socket} username={username} room={room}/>
+          <Game socket={socket} username={username} room={"game"}/>
+          <Chat socket={socket} username={username} room={"game"}/>
         </Fragment>
       )}
     </div>
