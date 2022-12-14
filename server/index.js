@@ -30,8 +30,8 @@ const status = {
 
 let gameState = {
     board: {},
-    players: []
-    //status: status.WAITING
+    players: [],
+    status: status.WAITING
 };
 
 // initiate and detect if someone connected to this socket io server
@@ -55,6 +55,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("start_game", (data) => {
+        gameState.status = status.PLAYING;
         data.gameState = gameState;
         data.showGame = true;
         io.in(data.room).emit("game_state", data);
@@ -62,11 +63,17 @@ io.on("connection", (socket) => {
 
     // event when user sends a messsage
     socket.on("send_message", (data) => {
-
-        //checkGuess();
-        //io.in(data.room).emit("game_state", data);
-        
+        // send message to entire room
         io.in(data.room).emit("receive_message", data);
+
+        if (gameState.status === "playing") {
+            // parse and check player guess
+            let guess = parseGuess(data.message);
+            checkGuess(guess, data.username);
+
+            // send updated game board to room
+            io.in(data.room).emit("game_state", {gameState: gameState, showGame: true});
+        }
     })
 
     // event when user leaves (refreshes)
@@ -74,6 +81,52 @@ io.on("connection", (socket) => {
         console.log(`User disconnected: ${socket.id}`);
     })
 });
+
+/* parse the text from chat box */
+function parseGuess(text) {
+    // regex pattern
+    const regex = /([0-9]+)([a-z]) ([a-z]+)/;
+    const match = text.toLowerCase().match(regex);
+    
+    let guess = {
+        number: 0,
+        dir: "",
+        word: ""
+    }
+
+    if (match != null) {
+        guess.number = parseInt(match[1]);
+        guess.dir = match[2];
+        guess.word = match[3];
+    }
+
+    return guess;
+}
+
+/* see if the guess is correct or not */
+function checkGuess(guess, player) {
+    for (let i = 0; i < gameState.board.numbers.length; i++) { 
+        let numData = gameState.board.numbers[i];
+        if (guess.number === numData.number && guess.dir === numData.dir) { // valid number and dir
+            start_x = numData.index[0];
+            start_y = numData.index[1];
+            for (let j = 0; j < numData.length; j++) { // compare the letters
+                // need to check that is hasnt been discovered yet
+                if (guess.dir === "h") {
+                    if (guess.word.charAt(j) === gameState.board.words[start_x][start_y + j]) {
+                        console.log("we have a letter match!!");
+                        gameState.board.discovered[start_x][start_y + j] = true;
+                    }
+                } else if (guess.dir === "v") {
+                    if (guess.word.charAt(j) === gameState.board.words[start_x + j][start_y]){
+                        console.log("we have a letter match!!");
+                        gameState.board.discovered[start_x + j][start_y] = true;
+                    }
+                }        
+            }
+        }
+    }
+}
 
 server.listen(3001, () => {
     console.log("Server is listening on port 3001");

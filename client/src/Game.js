@@ -48,8 +48,8 @@ const Game = ({ socket, username, room }) => {
                             return ( 
                                 <div className="row" key={j}> 
                                     {row.map((letter, k) => {
-                                        //if (letter != null && gameState.board.discovered[j][k] != null) {
-                                        if (letter != null) {
+                                        if (letter != null && gameState.board.discovered[j][k] != null) {
+                                        //if (letter != null) {
                                             if (gameState.board.starts[j][k] != null) {
                                                 // add word number with letter start
                                                 return (
@@ -65,11 +65,19 @@ const Game = ({ socket, username, room }) => {
                                                 )
                                             }
                                         } else if (letter != null) { // valid square but not discovered
-                                            return (
-                                                <div className="col-sm no-letter" key={k}> 
-                                                <p>~</p>
-                                                </div>
-                                             )
+                                            if (gameState.board.starts[j][k] != null) {
+                                                return (
+                                                    <div className="col-sm letter" key={k}> 
+                                                    <p><span className="num">{gameState.board.starts[j][k].number}.</span>&ensp; </p>
+                                                    </div>
+                                                )
+                                            } else {
+                                                return (
+                                                    <div className="col-sm no-letter" key={k}> 
+                                                    <p>~</p>
+                                                    </div>
+                                                )
+                                            }
                                         } else { // not a valid square
                                             return (
                                                 <div className="col-sm empty" key={k}> 

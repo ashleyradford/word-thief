@@ -19,6 +19,7 @@ function createBoard() {
     let board = {
         words: Array.from({length: 12}, () => Array.from({length: 12}, () => null)),
         starts: Array.from({length: 12}, () => Array.from({length: 12}, () => null)),
+        numbers: [],
         discovered: Array.from({length: 12}, () => Array.from({length: 12}, () => null))
     };
 
@@ -30,7 +31,7 @@ function createBoard() {
     let temp_x = Math.floor(board.words.length/2 - 1);
     let temp_y = Math.floor((board.words.length - wordList[0].length) / 2);
     placeWord(wordList[0], 0, [temp_x, temp_y], "h", board.words);
-    count = addWordStart(wordList[0], 0, count, [temp_x, temp_y], "h", board.starts);
+    count = addWordStart(wordList[0], 0, count, [temp_x, temp_y], "h", board.starts, board.numbers);
 
     words:
     for (let i = 1; i < wordList.length; i++) { // words in wordList
@@ -43,7 +44,7 @@ function createBoard() {
                         let ok = canPlace(word, l, [x, y], dir, board.words);
                         if (ok) {
                             placeWord(word, l, [x, y], dir, board.words);
-                            count = addWordStart(word, l, count, [x, y], dir, board.starts);
+                            count = addWordStart(word, l, count, [x, y], dir, board.starts, board.numbers);
                             continue words;
                         }
                     }
@@ -56,7 +57,7 @@ function createBoard() {
 }
 
 /* adds start and length of word */
-function addWordStart(word, l, count, [x, y], dir, starts) {
+function addWordStart(word, l, count, [x, y], dir, starts, numbers) {
     // set start of word
     if (dir === "h")
         y -= l;
@@ -72,12 +73,13 @@ function addWordStart(word, l, count, [x, y], dir, starts) {
     let wordData = {
         number: tmp,
         dir: dir,
-        length: word.length
+        length: word.length,
+        index: [x, y]
     }
 
     console.log(wordData);
-
     starts[x][y] = wordData;
+    numbers.push(wordData);
     return count;
 }
 
