@@ -1,4 +1,4 @@
-// entry point to our server
+/* entry point to the server */
 const express = require("express");
 const app = express();                      // an instance of the express function
 const http = require("http");

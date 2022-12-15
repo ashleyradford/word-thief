@@ -1,5 +1,4 @@
-// not using useState bc value doesn't change...maybe
-// check console for words and puzzle, rendered twice
+/* generates word options for puzzle */
 function generateWordList() {
     let wordList = Array.from({length: 50}, () => {
         let randomWords = require("random-words");
