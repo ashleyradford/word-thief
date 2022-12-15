@@ -21,44 +21,62 @@ const io = new Server(server, {
     }
 });
 
+const LETTER_POINT = 1;
+
 const status = {
     WAITING: 'waiting',
     PLAYING: 'playing',
-    WIN: 'win',
+    OVER: 'over',
     RESTART: 'restart'
 }
 
 let gameState = {
     board: {},
-    players: [],
+    players: new Map(),
     status: status.WAITING
 };
+
+// map of id : username
+let playersMap = new Map();
 
 // initiate and detect if someone connected to this socket io server
 // listening for an event with "connection" name
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
 
+    // first check that username is available
+    // socket.on("username_check", () => {
+    //     const usernames = [...gameState.players.keys()];
+    //     console.log(usernames);
+    //     socket.emit("return_usernames", usernames);
+    // })
+
     // create an event in socket.io which determines when someone wants to join a room
-    socket.on("join_room", (room) => {
-        socket.join(room);
-        gameState.players.push(socket.id);
+    socket.on("join_room", (joinData) => {
+        socket.join(joinData.room);
+
+        if (gameState.players.get(joinData.player) != null) {
+            return "Username is taken";
+        } else {
+            gameState.players.set(joinData.player, 0);
+            playersMap.set(socket.id, joinData.player);
+        }
 
         // create board when first player joins game room
-        if (gameState.players.length == 1) {
+        if (gameState.players.size == 1) {
             const board = require("./board");
             gameState.board = board.createBoard();
         }
-        
-        // io.in(id).emit("generate_puzzle", puzzle);
-        console.log(`User with ID: ${socket.id} joined room: ${room}`);
+
+        console.log(`Player with username: ${joinData.player} joined room: ${joinData.room}`);
     })
 
     socket.on("start_game", (data) => {
         gameState.status = status.PLAYING;
-        data.gameState = gameState;
-        data.showGame = true;
-        io.in(data.room).emit("game_state", data);
+
+        // send updated game board to room
+        const serializedPlayers = [...gameState.players.entries()];
+        io.in(data.room).emit("game_state", {gameState: gameState, playerScores: serializedPlayers, showGame: true});
     })
 
     // event when user sends a messsage
@@ -69,15 +87,24 @@ io.on("connection", (socket) => {
         if (gameState.status === "playing") {
             // parse and check player guess
             let guess = parseGuess(data.message);
-            checkGuess(guess, data.username);
+            checkGuess(guess, data.author);
 
             // send updated game board to room
-            io.in(data.room).emit("game_state", {gameState: gameState, showGame: true});
+            const serializedPlayers = [...gameState.players.entries()];
+            if (serializedPlayers === undefined) serializedPlayers = [];
+            io.in(data.room).emit("game_state", {gameState: gameState, playerScores: serializedPlayers, showGame: true});
         }
     })
 
     // event when user leaves (refreshes)
     socket.on("disconnect", () => {
+        let username = playersMap.get(socket.id);
+        gameState.players.delete(username);
+        playersMap.delete(socket.id);
+
+        // send updated game board to room
+        const serializedPlayers = [...gameState.players.entries()];
+        io.in("game").emit("game_state", {gameState: gameState, playerScores: serializedPlayers, showGame: true});
         console.log(`User disconnected: ${socket.id}`);
     })
 });
@@ -94,7 +121,7 @@ function parseGuess(text) {
         word: ""
     }
 
-    if (match != null) {
+    if (match !== null) {
         guess.number = parseInt(match[1]);
         guess.dir = match[2];
         guess.word = match[3];
@@ -110,19 +137,68 @@ function checkGuess(guess, player) {
         if (guess.number === numData.number && guess.dir === numData.dir) { // valid number and dir
             start_x = numData.index[0];
             start_y = numData.index[1];
+            let letters = 0;
+            let newLetter = 0;
+            let points = 0;
             for (let j = 0; j < numData.length; j++) { // compare the letters
                 // need to check that is hasnt been discovered yet
                 if (guess.dir === "h") {
                     if (guess.word.charAt(j) === gameState.board.words[start_x][start_y + j]) {
-                        console.log("we have a letter match!!");
-                        gameState.board.discovered[start_x][start_y + j] = true;
+                        // console.log("we have a letter match!");
+                        if (!gameState.board.discovered[start_x][start_y + j]) {
+                            newLetter++;
+                        }
+                        points = points + LETTER_POINT; // add points for each correct letter
+                        gameState.board.discovered[start_x][start_y + j] = true; // mark as discovered                     
+                        letters++; // add to discovered letter count
                     }
                 } else if (guess.dir === "v") {
                     if (guess.word.charAt(j) === gameState.board.words[start_x + j][start_y]){
-                        console.log("we have a letter match!!");
-                        gameState.board.discovered[start_x + j][start_y] = true;
+                        // console.log("we have a letter match!");
+                        if (!gameState.board.discovered[start_x + j][start_y]) {
+                            newLetter++;
+                        }
+                        points = points + LETTER_POINT; // add points for each correct letter
+                        gameState.board.discovered[start_x + j][start_y] = true; // mark as discovered
+                        letters++; // add to discovered letter count
                     }
                 }        
+            }
+
+            // no new letters found
+            if (newLetter === 0) {
+                points = 0;
+            }
+
+            // check if word is complete for the first time
+            if (letters === numData.length && newLetter > 0) {
+                // whole word discovered
+                points = points + newLetter;
+                gameState.board.total = gameState.board.total - 1;
+            } else {
+                points = newLetter; // didn't finish word, only found a few new letters
+            }
+
+            // give points to player
+            points = points + gameState.players.get(player);
+            gameState.players.set(player, points);
+
+            // check if game is over
+            if (gameState.board.total == 0) {
+                console.log("GAME OVER");
+                gameState.status = status.OVER;
+
+                let winner = "";
+                let bestScore = 0;
+                for (let [player, score] of gameState.players) {
+                    if (score > bestScore) {
+                        winner = player;
+                        bestScore = score;
+                    }
+                }
+
+                // let users know
+                io.in("game").emit("game_over", winner)
             }
         }
     }

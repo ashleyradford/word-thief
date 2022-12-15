@@ -4,6 +4,8 @@ const Game = ({ socket, username, room }) => {
     // create state so we can keep track of game state
     const [gameState, setGameState] = useState({});
     const [showGame, setShowGame] = useState(false);
+    const [winner, setWinner] = useState("");
+    const [gameOver, setGameOver] = useState(false);
     
     const startGame = () => {
         const gameData = {
@@ -29,11 +31,23 @@ const Game = ({ socket, username, room }) => {
 
     }, [socket]);
 
+    // listen for when there is a winner
+    socket.on("game_over", (winner) => {
+        setWinner(winner);
+    })
 
     // checking if game state has been updated
     useEffect(() => {
+        console.log("gameState state change: ")
         console.log(gameState);
     }, [gameState]);
+
+    // checking if game state has been updated
+    useEffect(() => {
+        if (winner !== "") {
+            setGameOver(true);
+        }
+    }, [winner]);
 
     return (
         <div className="game-window">
@@ -41,55 +55,58 @@ const Game = ({ socket, username, room }) => {
                 <div className="start-button">
                     <br></br><button type="button" className="btn btn-primary" onClick={startGame}>Start Game</button>
                 </div>
-                ) : (
+                ) : ( 
                 <div className="puzzle">
-                    <br></br><div className="container">
-                        {gameState.board.words.map((row, j) => {
-                            return ( 
-                                <div className="row" key={j}> 
-                                    {row.map((letter, k) => {
-                                        if (letter != null && gameState.board.discovered[j][k] != null) {
-                                        //if (letter != null) {
-                                            if (gameState.board.starts[j][k] != null) {
-                                                // add word number with letter start
+                    {!gameOver ? (
+                        <div className="container"><br></br>
+                            {gameState.board.words.map((row, j) => {
+                                return ( 
+                                    <div className="row" key={j}> 
+                                        {row.map((letter, k) => {
+                                            if (letter !== null && gameState.board.discovered[j][k]) {
+                                                if (gameState.board.starts[j][k] !== null) {
+                                                    // add word number with letter start
+                                                    return (
+                                                        <div className="col-sm letter" key={k}> 
+                                                        <p><span className="num">{gameState.board.starts[j][k].number}.</span>&ensp;{letter}</p>
+                                                        </div>
+                                                    )
+                                                } else { // add only the letter (not a start)
+                                                    return (
+                                                        <div className="col-sm letter" key={k}> 
+                                                        <p>{letter}</p>
+                                                        </div>
+                                                    )
+                                                }
+                                            } else if (letter !== null) { // valid square but not discovered
+                                                if (gameState.board.starts[j][k] !== null) {
+                                                    return (
+                                                        <div className="col-sm letter" key={k}> 
+                                                        <p><span className="num">{gameState.board.starts[j][k].number}.</span>&ensp; </p>
+                                                        </div>
+                                                    )
+                                                } else {
+                                                    return (
+                                                        <div className="col-sm no-letter" key={k}> 
+                                                        <p>~</p>
+                                                        </div>
+                                                    )
+                                                }
+                                            } else { // not a valid square
                                                 return (
-                                                    <div className="col-sm letter" key={k}> 
-                                                    <p><span className="num">{gameState.board.starts[j][k].number}.</span>&ensp;{letter}</p>
-                                                    </div>
-                                                )
-                                            } else { // add only the letter (not a start)
-                                                return (
-                                                    <div className="col-sm letter" key={k}> 
+                                                    <div className="col-sm empty" key={k}> 
                                                     <p>{letter}</p>
                                                     </div>
                                                 )
                                             }
-                                        } else if (letter != null) { // valid square but not discovered
-                                            if (gameState.board.starts[j][k] != null) {
-                                                return (
-                                                    <div className="col-sm letter" key={k}> 
-                                                    <p><span className="num">{gameState.board.starts[j][k].number}.</span>&ensp; </p>
-                                                    </div>
-                                                )
-                                            } else {
-                                                return (
-                                                    <div className="col-sm no-letter" key={k}> 
-                                                    <p>~</p>
-                                                    </div>
-                                                )
-                                            }
-                                        } else { // not a valid square
-                                            return (
-                                                <div className="col-sm empty" key={k}> 
-                                                <p>{letter}</p>
-                                                </div>
-                                            )
-                                        }
-                                    })}
-                                </div>
-                            );
-                        })}
-                    </div>
+                                        })}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        ) : (
+                        <h2><br></br>WINNER: {winner}</h2>
+                    )}
                 </div>
             )}
         </div>

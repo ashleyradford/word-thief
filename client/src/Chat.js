@@ -41,7 +41,7 @@ const Chat = ({ socket, username, room }) => {
     return (
         <div className="chat-window">
             <div className="chat-header">
-                <br></br><p>Guess a word!</p>
+                <br></br><p>Guess a word!</p><hr></hr>
             </div>
             <div className="chat-body">
                 <ScrollToBottom className="messageContainter">
@@ -53,11 +53,7 @@ const Chat = ({ socket, username, room }) => {
                                 id={username === messageData.author ? "you" : "other"}>
                                 <div>
                                     <div className="messageContent">
-                                        <p><strong>{messageData.message}</strong></p>
-                                    </div>
-                                    <div className="messageMeta">
-                                        {/* <p id="time">{messageData.time}</p> */}
-                                        <p id="author">{messageData.author}</p>
+                                        <p><b>{messageData.author}:</b> {messageData.message}</p>
                                     </div>
                                 </div>
                             </div>

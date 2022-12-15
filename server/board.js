@@ -20,7 +20,8 @@ function createBoard() {
         words: Array.from({length: 12}, () => Array.from({length: 12}, () => null)),
         starts: Array.from({length: 12}, () => Array.from({length: 12}, () => null)),
         numbers: [],
-        discovered: Array.from({length: 12}, () => Array.from({length: 12}, () => null))
+        discovered: Array.from({length: 12}, () => Array.from({length: 12}, () => false)),
+        total: 0
     };
 
     // generate word list
@@ -30,7 +31,7 @@ function createBoard() {
     // place first word
     let temp_x = Math.floor(board.words.length/2 - 1);
     let temp_y = Math.floor((board.words.length - wordList[0].length) / 2);
-    placeWord(wordList[0], 0, [temp_x, temp_y], "h", board.words);
+    board.total = placeWord(wordList[0], 0, [temp_x, temp_y], "h", board.words, board.total);
     count = addWordStart(wordList[0], 0, count, [temp_x, temp_y], "h", board.starts, board.numbers);
 
     words:
@@ -43,7 +44,7 @@ function createBoard() {
                         let dir = getDir([x, y], board.words);
                         let ok = canPlace(word, l, [x, y], dir, board.words);
                         if (ok) {
-                            placeWord(word, l, [x, y], dir, board.words);
+                            board.total = placeWord(word, l, [x, y], dir, board.words, board.total);
                             count = addWordStart(word, l, count, [x, y], dir, board.starts, board.numbers);
                             continue words;
                         }
@@ -64,7 +65,7 @@ function addWordStart(word, l, count, [x, y], dir, starts, numbers) {
     if (dir === "v")
         x -= l;
     
-    if (starts[x][y] != null) {
+    if (starts[x][y] !== null) {
         tmp = starts[x][y].number;
     } else {
         tmp = count++;
@@ -77,7 +78,7 @@ function addWordStart(word, l, count, [x, y], dir, starts, numbers) {
         index: [x, y]
     }
 
-    console.log(wordData);
+    console.log(wordData); // for answers
     starts[x][y] = wordData;
     numbers.push(wordData);
     return count;
@@ -140,7 +141,7 @@ function canPlace(word, l, match, direction, board) {
 }
 
 /* adds word to crossword board */
-function placeWord(word, l, match, direction, board) {
+function placeWord(word, l, match, direction, board, total) {
     let i = match[0];
     let j = match[1];
 
@@ -158,7 +159,8 @@ function placeWord(word, l, match, direction, board) {
             board[i++][j] = word[k];
     }
 
-    console.log(word);
+    console.log(word); // for answers
+    return total + 1;
 }
 
 /* checks if index[i, j] is in bounds */
@@ -179,15 +181,15 @@ function isVerticalCellValid(index, letter, board) {
         return true;
 
     // check if cell is already occupied by another non matching letter
-    if (inBounds([index[0], index[1]], board) && board[index[0]][index[1]] != null && board[index[0]][index[1]] != letter)
+    if (inBounds([index[0], index[1]], board) && board[index[0]][index[1]] !== null && board[index[0]][index[1]] !== letter)
         return false;
 
     // check if left cell is empty
-    if (inBounds([index[0], index[1] - 1], board) && board[index[0]][index[1] - 1] != null)
+    if (inBounds([index[0], index[1] - 1], board) && board[index[0]][index[1] - 1] !== null)
         return false;
 
     // check if right cell is empty
-    if (inBounds([index[0], index[1] + 1], board) && board[index[0]][index[1] + 1] != null)
+    if (inBounds([index[0], index[1] + 1], board) && board[index[0]][index[1] + 1] !== null)
         return false;
 
     return true;
@@ -200,15 +202,15 @@ function isHorizontalCellValid(index, letter, board) {
         return true;
 
     // check if cell is already occupied by another non matching letter
-    if (inBounds([index[0], index[1]], board) && board[index[0]][index[1]] != null && board[index[0]][index[1]] != letter)
+    if (inBounds([index[0], index[1]], board) && board[index[0]][index[1]] !== null && board[index[0]][index[1]] !== letter)
         return false;
 
     // check if below cell is empty
-    if (inBounds([index[0] - 1, index[1]], board) && board[index[0] - 1][index[1]] != null)
+    if (inBounds([index[0] - 1, index[1]], board) && board[index[0] - 1][index[1]] !== null)
         return false;
 
     // check if above cell is empty
-    if (inBounds([index[0] + 1, index[1]], board) && board[index[0] + 1][index[1]] != null)
+    if (inBounds([index[0] + 1, index[1]], board) && board[index[0] + 1][index[1]] !== null)
         return false;
 
     return true;
