@@ -14,3 +14,8 @@ External Libraries:
  - "socket.io": "4.5.3"
  - "nodemon": "2.0.20"
  - "random-words": "1.2.0"
+
+
+Rules:
+- Player gets 1 point for each letter guessed correctly
+- If a player finishes a word, they get 2 points per each newly discovered letter and 1 point for an already discovered letter
